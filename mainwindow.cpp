@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
+    this->setFixedSize(this->size());
     ui->chooseGroupBox->setVisible(false);
     ui->downloadGroupBox->setVisible(false);
 }
