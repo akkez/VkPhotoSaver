@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->chooseGroupBox->setVisible(false);
+    ui->dowloadGroupBox->setVisible(false);
 }
 
 MainWindow::~MainWindow()
