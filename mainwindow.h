@@ -28,6 +28,8 @@ public:
 
     void getAlbums();
     void getPhotoList();
+    void goToChooseScreen();
+    void goToDownloadScreen();
     
 private slots:
     void on_initAuthButton_clicked();

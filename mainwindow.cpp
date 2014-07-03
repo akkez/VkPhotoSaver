@@ -91,10 +91,7 @@ void MainWindow::albumListReceivedSlot(QNetworkReply* reply)
                 ui->albumComboBox->setItemData(i, albumId.toVariant());
             }
 
-            this->authScreen = false;
-            this->chooseScreen = true;
-            ui->authGroupBox->setVisible(false);
-            ui->chooseGroupBox->setVisible(true);
+            this->goToChooseScreen();
         }
     }
     else
@@ -165,13 +162,25 @@ void MainWindow::getPhotoList() {
     QNetworkReply* reply = nam->get(QNetworkRequest(url));
 }
 
-void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
+void MainWindow::goToDownloadScreen() {
     this->downloadScreen = true;
     this->chooseScreen = false;
     ui->downloadGroupBox->setVisible(true);
     ui->chooseGroupBox->setVisible(false);
+    ui->authGroupBox->setVisible(false);
+}
 
+void MainWindow::goToChooseScreen() {
+    this->authScreen = false;
+    this->chooseScreen = true;
+    ui->authGroupBox->setVisible(false);
+    ui->chooseGroupBox->setVisible(true);
+    ui->downloadGroupBox->setVisible(false);
+}
+
+void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
     QVector<QString> results;
+    this->goToDownloadScreen();
 
     if (reply->error() == QNetworkReply::NoError)
     {
@@ -183,6 +192,7 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
             QJsonObject error = jsonObject["error"].toObject();
             QString message = error["error_msg"].toString();
             QMessageBox::critical(this, QString("Ошибка"), message);
+            this->goToChooseScreen();
         } else {
             QJsonObject bag = jsonObject["response"].toObject();
             QJsonArray items = bag["items"].toArray();
@@ -220,6 +230,7 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
     else
     {
         QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером"));
+        this->goToChooseScreen();
     }
 
     reply->deleteLater();
