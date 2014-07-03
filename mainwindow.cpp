@@ -298,6 +298,7 @@ void MainWindow::photoDownloadFinishedSlot(QNetworkReply* reply) {
         if (this->currentPhoto >= this->photoUrls.size()) {
             ui->totalProgressBar->setValue(this->photoUrls.size());
             QMessageBox::information(this, "", "Загрузка фотографий из альбома успешно завершена");
+            QDesktopServices::openUrl(QUrl(QString("file:///").append(this->dirname), QUrl::TolerantMode));
             ui->retryButton->setVisible(true);
             return;
         } else {
