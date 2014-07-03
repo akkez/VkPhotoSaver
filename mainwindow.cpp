@@ -97,7 +97,7 @@ void MainWindow::albumListReceivedSlot(QNetworkReply* reply)
     }
     else
     {
-        QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером"));
+        QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером: ").append(reply->errorString()));
     }
     reply->deleteLater();
 }
