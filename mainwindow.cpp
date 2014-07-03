@@ -11,6 +11,8 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QDebug>
+#include <QFileDialog>
+#include <QDir>
 
 QNetworkAccessManager* nam;
 
@@ -121,5 +123,17 @@ void MainWindow::on_chooseAlbumBotton_clicked()
         QMessageBox::information(this, QString(), QString("my album: ").append(albumId));
     } else {
         QMessageBox::information(this, QString(), QString("album url: ").append(ui->albumEdit->text()));
+    }
+
+
+    QString dirname = QFileDialog::getExistingDirectory(
+        this,
+        tr("Выберите папку для сохранения альбома"),
+        QDir::currentPath() );
+    if( !dirname.isNull() && QDir(dirname).exists())
+    {
+        QMessageBox::information(this, QString(), QString("save folder = ").append(dirname));
+    } else {
+        QMessageBox::critical(this, QString(), QString("save folder does not exists"));
     }
 }
