@@ -249,6 +249,12 @@ QString MainWindow::getLocalPhotoFilename(QString photoUrl) {
 }
 
 void MainWindow::downloadNextPhoto() {
+    if (this->photoUrls.size() == 0) {
+        QMessageBox::warning(this, "", "Выбранный альбом пуст");
+        ui->retryButton->setVisible(true);
+        return;
+    }
+
     QString photoUrl;
     while (true) {
         photoUrl = this->photoUrls[this->currentPhoto];
