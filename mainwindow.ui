@@ -179,7 +179,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="statusLabel">
         <property name="text">
          <string>Идет скачивание фотографий...</string>
         </property>
@@ -189,9 +189,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="photoUrlLabel">
         <property name="text">
-         <string>http://cs413022.vk.me/v413022032/6682/bYrZl4_Jawg.jpg...</string>
+         <string/>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -201,14 +201,14 @@
       <item>
        <widget class="QProgressBar" name="progressBar">
         <property name="value">
-         <number>24</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QProgressBar" name="totalProgressBar">
         <property name="value">
-         <number>24</number>
+         <number>0</number>
         </property>
         <property name="format">
          <string>12 из 200</string>

@@ -56,13 +56,13 @@ void MainWindow::on_authButton_clicked()
 void MainWindow::getAlbums() {
     nam = new QNetworkAccessManager(this);
     QObject::connect(nam, SIGNAL(finished(QNetworkReply*)),
-             this, SLOT(finishedGetAlbumsSlot(QNetworkReply*)));
+             this, SLOT(albumListReceivedSlot(QNetworkReply*)));
 
     QUrl url(QString("https://api.vk.com/method/photos.getAlbums?v=5&need_system=1&count=50&access_token=").append(this->token));
     QNetworkReply* reply = nam->get(QNetworkRequest(url));
 }
 
-void MainWindow::finishedGetAlbumsSlot(QNetworkReply* reply)
+void MainWindow::albumListReceivedSlot(QNetworkReply* reply)
 {
     if (reply->error() == QNetworkReply::NoError)
     {
@@ -101,7 +101,7 @@ void MainWindow::finishedGetAlbumsSlot(QNetworkReply* reply)
     {
         QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером"));
     }
-    delete reply;
+    reply->deleteLater();
 }
 
 void MainWindow::on_radioButton1_clicked()
@@ -119,21 +119,108 @@ void MainWindow::on_radioButton2_clicked()
 void MainWindow::on_chooseAlbumBotton_clicked()
 {
     if (ui->albumComboBox->isEnabled()) {
-        QString albumId = ui->albumComboBox->itemData(ui->albumComboBox->currentIndex()).toString(); //ui->albumComboBox->itemData().toString());
-        QMessageBox::information(this, QString(), QString("my album: ").append(albumId));
+        this->albumId = ui->albumComboBox->itemData(ui->albumComboBox->currentIndex()).toString();
     } else {
-        QMessageBox::information(this, QString(), QString("album url: ").append(ui->albumEdit->text()));
+        QRegExp expression("album(-?[0-9]+)_([0-9]+)");
+        QString albumUrl = ui->albumEdit->text();
+
+        int pos = expression.indexIn(albumUrl);
+        if (pos > -1) {
+            this->ownerId = expression.cap(1);
+            this->albumId = expression.cap(2);
+        } else {
+            QMessageBox::critical(this, QString("Ошибка"), QString("Ссылка на альбом неправильная"));
+            return;
+        }
     }
 
-
-    QString dirname = QFileDialog::getExistingDirectory(
-        this,
-        tr("Выберите папку для сохранения альбома"),
-        QDir::currentPath() );
+ /*   QString dirname = QFileDialog::getExistingDirectory(this, QString("Выберите папку для сохранения альбома"), QDir::currentPath());
     if( !dirname.isNull() && QDir(dirname).exists())
     {
-        QMessageBox::information(this, QString(), QString("save folder = ").append(dirname));
+        this->dirname = dirname;
     } else {
-        QMessageBox::critical(this, QString(), QString("save folder does not exists"));
+        //save folder does not exists
+        return;
     }
+*/
+    this->offset = 0;
+    this->getPhotoList();
+}
+
+void MainWindow::getPhotoList() {
+    int offset = this->offset;
+
+    ui->statusLabel->setText(QString("Получение списка фотографий %1-%2...").arg(offset).arg(offset + 999));
+
+    nam = new QNetworkAccessManager(this);
+    QObject::connect(nam, SIGNAL(finished(QNetworkReply*)),
+             this, SLOT(photoListReceivedSlot(QNetworkReply*)));
+
+    QString requestUrl(QString("https://api.vk.com/method/photos.get?v=5&owner_id=%1&album_id=%2&offset=%3&count=1000&access_token=%4")
+                       .arg(this->ownerId)
+                       .arg(this->albumId)
+                       .arg(offset)
+                       .arg(this->token));
+    QUrl url(requestUrl);
+    QNetworkReply* reply = nam->get(QNetworkRequest(url));
+}
+
+void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
+    this->downloadScreen = true;
+    this->chooseScreen = false;
+    ui->downloadGroupBox->setVisible(true);
+    ui->chooseGroupBox->setVisible(false);
+
+    QVector<QString> results;
+
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        QByteArray bytes = reply->readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(bytes);
+        QJsonObject jsonObject = jsonResponse.object();
+
+        if (jsonObject["error"].isObject()) {
+            QJsonObject error = jsonObject["error"].toObject();
+            QString message = error["error_msg"].toString();
+            QMessageBox::critical(this, QString("Ошибка"), message);
+        } else {
+            QJsonObject bag = jsonObject["response"].toObject();
+            QJsonArray items = bag["items"].toArray();
+
+            QJsonObject photo;
+            QString photoUrl;
+            results.clear();
+            for (int i = 0; i < items.size(); i++) {
+                photo = items[i].toObject();
+
+                if (photo["photo_2560"].isString()) {
+                    photoUrl = photo["photo_2560"].toString();
+                } else if (photo["photo_1280"].isString()) {
+                    photoUrl = photo["photo_1280"].toString();
+                } else if (photo["photo_807"].isString()) {
+                    photoUrl = photo["photo_807"].toString();
+                } else if (photo["photo_604"].isString()) {
+                    photoUrl = photo["photo_604"].toString();
+                }
+
+                results.push_back(photoUrl);
+
+                qDebug()<<photoUrl;
+            }
+
+            if (results.size() > 0) {
+                this->photoUrls += results;
+                this->offset += 1000;
+                this->getPhotoList();
+            } else {
+                QMessageBox::information(this, "", QString("got %1 photo urls").arg(this->photoUrls.size()));
+            }
+        }
+    }
+    else
+    {
+        QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером"));
+    }
+
+    reply->deleteLater();
 }
