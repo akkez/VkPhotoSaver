@@ -35,6 +35,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_initAuthButton_clicked()
 {
     QDesktopServices::openUrl(QUrl("https://oauth.vk.com/authorize?client_id=4440951&response_type=token&scope=photos&redirect_uri=http://api.vk.com/blank.html"));
+    ui->tokenEdit->setFocus();
 }
 
 void MainWindow::on_authButton_clicked()
@@ -168,6 +169,7 @@ void MainWindow::goToDownloadScreen() {
     ui->downloadGroupBox->setVisible(true);
     ui->chooseGroupBox->setVisible(false);
     ui->authGroupBox->setVisible(false);
+    ui->retryButton->setVisible(false);
 }
 
 void MainWindow::goToChooseScreen() {
@@ -296,6 +298,7 @@ void MainWindow::photoDownloadFinishedSlot(QNetworkReply* reply) {
         if (this->currentPhoto >= this->photoUrls.size()) {
             ui->totalProgressBar->setValue(this->photoUrls.size());
             QMessageBox::information(this, "", "Загрузка фотографий из альбома успешно завершена");
+            ui->retryButton->setVisible(true);
             return;
         } else {
             this->downloadNextPhoto();
@@ -307,4 +310,10 @@ void MainWindow::photoDownloadProgressSlot(qint64 received, qint64 total) {
     ui->progressBar->setFormat(QString("%1 KB / %2 KB").arg((int)(received / 1024)).arg((int)(total / 1024)));
     ui->progressBar->setValue((int)(received * 100 / total));
 //    qDebug() << "received " << received << ", total "<< total;
+}
+
+void MainWindow::on_retryButton_clicked()
+{
+    this->photoUrls.clear();
+    this->goToChooseScreen();
 }

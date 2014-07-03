@@ -46,6 +46,8 @@ private slots:
     void photoDownloadFinishedSlot(QNetworkReply* reply);
     void photoDownloadProgressSlot(qint64 received, qint64 total);
 
+    void on_retryButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 };
