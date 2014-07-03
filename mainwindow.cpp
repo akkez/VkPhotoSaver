@@ -131,7 +131,7 @@ void MainWindow::on_chooseAlbumBotton_clicked()
         }
     }
 
- /*   QString dirname = QFileDialog::getExistingDirectory(this, QString("Выберите папку для сохранения альбома"), QDir::currentPath());
+    QString dirname = QFileDialog::getExistingDirectory(this, QString("Выберите папку для сохранения альбома"), QDir::currentPath());
     if( !dirname.isNull() && QDir(dirname).exists())
     {
         this->dirname = dirname;
@@ -139,7 +139,7 @@ void MainWindow::on_chooseAlbumBotton_clicked()
         //save folder does not exists
         return;
     }
-*/
+
     this->offset = 0;
     this->getPhotoList();
 }
@@ -215,7 +215,7 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
 
                 results.push_back(photoUrl);
 
-                qDebug()<<photoUrl;
+            //    qDebug()<<photoUrl;
             }
 
             if (results.size() > 0) {
@@ -223,7 +223,10 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
                 this->offset += 1000;
                 this->getPhotoList();
             } else {
-                QMessageBox::information(this, "", QString("got %1 photo urls").arg(this->photoUrls.size()));
+                this->currentPhoto = 0;
+                ui->totalProgressBar->setMaximum(this->photoUrls.size());
+                ui->totalProgressBar->setValue(0);
+                this->downloadNextPhoto();
             }
         }
     }
@@ -234,4 +237,74 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
     }
 
     reply->deleteLater();
+}
+
+QString MainWindow::getLocalPhotoFilename(QString photoUrl) {
+    QStringList urlParts = photoUrl.split("/");
+    QString filename = urlParts[urlParts.size() - 1];
+
+    return QString(this->dirname).append("/").append(filename);
+}
+
+void MainWindow::downloadNextPhoto() {
+    QString photoUrl;
+    while (true) {
+        photoUrl = this->photoUrls[this->currentPhoto];
+        QFile file(this->getLocalPhotoFilename(photoUrl));
+        if (!file.exists() || this->currentPhoto == this->photoUrls.size() - 1) {
+            break;
+        }
+        this->currentPhoto++;
+    }
+
+    ui->totalProgressBar->setValue(this->currentPhoto);
+    ui->statusLabel->setText(QString("Скачивание фотографии #").append(QString::number(this->currentPhoto + 1)));
+    ui->photoUrlLabel->setText(this->photoUrls[this->currentPhoto]);
+
+    nam = new QNetworkAccessManager(this);
+    QObject::connect(nam, SIGNAL(finished(QNetworkReply*)),
+             this, SLOT(photoDownloadFinishedSlot(QNetworkReply*)));
+
+    QNetworkReply* reply = nam->get(QNetworkRequest(QUrl(photoUrl)));
+
+    QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
+             this, SLOT(photoDownloadProgressSlot(qint64,qint64)));
+}
+
+void MainWindow::photoDownloadFinishedSlot(QNetworkReply* reply) {
+    bool result = false;
+
+    QString filename = this->getLocalPhotoFilename(reply->url().toString());
+
+    QFile file(filename);
+    qDebug() << filename;
+    if (!file.exists()) {
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(reply->readAll());
+            file.close();
+            result = true;
+        } else {
+            QMessageBox::critical(this, "Ошибка", QString("Невозможно записать файл %1 на диск").arg(filename));
+        }
+    } else {
+        result = true;
+    }
+
+    reply->deleteLater();
+    if (result) {
+        this->currentPhoto++;
+        if (this->currentPhoto >= this->photoUrls.size()) {
+            ui->totalProgressBar->setValue(this->photoUrls.size());
+            QMessageBox::information(this, "", "Загрузка фотографий из альбома успешно завершена");
+            return;
+        } else {
+            this->downloadNextPhoto();
+        }
+    }
+}
+
+void MainWindow::photoDownloadProgressSlot(qint64 received, qint64 total) {
+    ui->progressBar->setFormat(QString("%1 KB / %2 KB").arg((int)(received / 1024)).arg((int)(total / 1024)));
+    ui->progressBar->setValue((int)(received * 100 / total));
+//    qDebug() << "received " << received << ", total "<< total;
 }

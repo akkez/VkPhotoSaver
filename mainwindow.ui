@@ -200,6 +200,9 @@
       </item>
       <item>
        <widget class="QProgressBar" name="progressBar">
+        <property name="maximum">
+         <number>100</number>
+        </property>
         <property name="value">
          <number>0</number>
         </property>
@@ -211,7 +214,7 @@
          <number>0</number>
         </property>
         <property name="format">
-         <string>12 из 200</string>
+         <string>%v из %m фото</string>
         </property>
        </widget>
       </item>

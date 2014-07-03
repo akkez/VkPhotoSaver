@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QNetworkReply>
+#include <QFile>
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +21,7 @@ public:
     bool downloadScreen = false;
 
     int offset;
+    int currentPhoto;
     QString token;
     QString albumId;
     QString ownerId;
@@ -30,6 +32,8 @@ public:
     void getPhotoList();
     void goToChooseScreen();
     void goToDownloadScreen();
+    void downloadNextPhoto();
+    QString getLocalPhotoFilename(QString photoUrl);
     
 private slots:
     void on_initAuthButton_clicked();
@@ -39,6 +43,8 @@ private slots:
     void on_radioButton1_clicked();
     void on_radioButton2_clicked();
     void on_chooseAlbumBotton_clicked();
+    void photoDownloadFinishedSlot(QNetworkReply* reply);
+    void photoDownloadProgressSlot(qint64 received, qint64 total);
 
 private:
     Ui::MainWindow *ui;
