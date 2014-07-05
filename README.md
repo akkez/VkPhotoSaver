@@ -9,4 +9,4 @@ Screenshot:
 
 Download:
 
-https://github.com/akkez/VkPhotoSaver/releases/tag/0.1.1
+https://github.com/akkez/VkPhotoSaver/releases/tag/0.1.2
