@@ -99,6 +99,7 @@ void MainWindow::albumListReceivedSlot(QNetworkReply* reply)
     {
         QMessageBox::critical(this, QString("Ошибка"), QString("Невозможно установить соединение с сервером: ").append(reply->errorString()));
     }
+    reply->manager()->deleteLater();
     reply->deleteLater();
 }
 
@@ -238,6 +239,7 @@ void MainWindow::photoListReceivedSlot(QNetworkReply* reply) {
         this->goToChooseScreen();
     }
 
+    reply->manager()->deleteLater();
     reply->deleteLater();
 }
 
@@ -298,6 +300,7 @@ void MainWindow::photoDownloadFinishedSlot(QNetworkReply* reply) {
         result = true;
     }
 
+    reply->manager()->deleteLater();
     reply->deleteLater();
     if (result) {
         this->currentPhoto++;
